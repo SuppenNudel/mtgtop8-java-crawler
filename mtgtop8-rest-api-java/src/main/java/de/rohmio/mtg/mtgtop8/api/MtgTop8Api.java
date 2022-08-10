@@ -10,7 +10,7 @@ public abstract class MtgTop8Api {
 	public static Level LOG_LEVEL = Level.ALL;
 
 	/**
-	 * @param cardName The exact card name to search for, case insenstive.
+	 * @return the endpoint
 	 */
 	public static SearchEndpoint search() {
 		return new SearchEndpoint();
