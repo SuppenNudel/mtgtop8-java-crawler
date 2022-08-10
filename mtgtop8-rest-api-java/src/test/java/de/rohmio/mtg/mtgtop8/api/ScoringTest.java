@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import de.rohmio.mtg.mtgtop8.api.endpoints.SearchEndpoint;
 import de.rohmio.mtg.mtgtop8.api.model.CompLevel;
 import de.rohmio.mtg.mtgtop8.api.model.MtgTop8Format;
+import de.rohmio.mtg.mtgtop8.api.model.SearchResult;
 
 public class ScoringTest {
 
@@ -59,13 +60,13 @@ public class ScoringTest {
 	@Test
 	public void allFormats() throws IOException {
 		int allDecks = 0;
-		int decks = endpoint.get();
+		SearchResult decks = endpoint.get();
 		for(MtgTop8Format format : MtgTop8Format.values()) {
 			endpoint.format(format);
-			allDecks += endpoint.get();
+			allDecks += endpoint.get().getDecksMatching();
 		}
 
-		assertEquals(allDecks, decks);
+		assertEquals(allDecks, decks.getDecksMatching());
 	}
 
 	@Test
@@ -73,22 +74,22 @@ public class ScoringTest {
 		endpoint.format(MtgTop8Format.MODERN);
 
 		endpoint.cards("Lightning Bolt");
-		int decks1 = endpoint.get();
+		int decks1 = endpoint.get().getDecksMatching();
 		assertEquals(2193, decks1);
 
 
 		endpoint.cards("Birds of Paradise");
-		int decks2 = endpoint.get();
+		int decks2 = endpoint.get().getDecksMatching();
 		assertEquals(415, decks2);
 
 
 		endpoint.cards("Leyline of the Void");
-		int decks3 = endpoint.get();
+		int decks3 = endpoint.get().getDecksMatching();
 		assertEquals(954, decks3);
 
 
 		endpoint.cards("Devoted Druid");
-		int decks4 = endpoint.get();
+		int decks4 = endpoint.get().getDecksMatching();
 		assertEquals(203, decks4);
 	}
 

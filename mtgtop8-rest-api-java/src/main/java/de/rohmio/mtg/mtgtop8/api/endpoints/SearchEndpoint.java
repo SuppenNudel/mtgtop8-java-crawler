@@ -6,24 +6,30 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.core.Response;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
 
 import de.rohmio.mtg.mtgtop8.api.model.CompLevel;
 import de.rohmio.mtg.mtgtop8.api.model.MtgTop8Format;
+import de.rohmio.mtg.mtgtop8.api.model.SearchResult;
+import de.rohmio.mtg.mtgtop8.api.model.SearchResultDeck;
 
 
-public class SearchEndpoint extends AbstractEndpoint<Integer> {
+public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 
 	private static final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
 //	private static Map<String, Integer> scores = new HashMap<>();
 
 	public SearchEndpoint() {
-		super("search", Integer.class);
+		super("search", SearchResult.class);
 	}
 
 	public SearchEndpoint format(MtgTop8Format format) {
@@ -137,17 +143,26 @@ public class SearchEndpoint extends AbstractEndpoint<Integer> {
 	*/
 
 	@Override
-	protected Integer parseReponse(Response response) {
+	protected SearchResult parseReponse(Response response) {
 		String html = response.readEntity(String.class);
-		int deckCount = parseDocumentForDeckCount(html);
-		return deckCount;
+		Document document = Jsoup.parse(html);
+		
+		SearchResult searchResult = new SearchResult();
+		int deckCount = parseDocumentForDeckCount(document);
+		searchResult.setDecksMatching(deckCount);
+		
+		List<SearchResultDeck> decks = parseDocumentForDecks(document);
+		searchResult.setDecks(decks);
+		
+		
+		return searchResult;
 	}
 
 	public final static int NO_MATCH = -2;
 	public final static int TOO_MANY_CARDS = -3;
+	public final static int OTHER_ERRROR = -4;
 
-	private int parseDocumentForDeckCount(String html) {
-		Document document = Jsoup.parse(html);
+	private int parseDocumentForDeckCount(Document document) {
 		if(document.toString().contains("No match for")) {
 			// probably a double named card, where only the front side is wanted
 			return NO_MATCH;
@@ -155,12 +170,67 @@ public class SearchEndpoint extends AbstractEndpoint<Integer> {
 			// probably a split card, where only the front side got used
 			return TOO_MANY_CARDS;
 		}
+		
+		
 		String sumText = document.select("table > tbody > tr > td > div[class=w_title]").text();
-		sumText = sumText.replace("decks matching", "").trim();
+		Pattern pattern = Pattern.compile("([0-9]+) decks matching");
+		Matcher matcher = pattern.matcher(sumText);
+		if(matcher.matches()) {
+			String countStr = matcher.group(1);
+			int decksMatching = Integer.parseInt(countStr);
+			return decksMatching;
+		}
+		return OTHER_ERRROR;
+	}
+	
+	private List<SearchResultDeck> parseDocumentForDecks(Document document) {
+		ArrayList<SearchResultDeck> decks = new ArrayList<>();
+		Elements deckRows = document.select("table.Stable tr.hover_tr");
+		for(Element deckRow : deckRows) {
+			SearchResultDeck searchResultDeck = new SearchResultDeck();
+//			deckRow.select(evaluator)
+			Elements columns = deckRow.select("td");
+			Element deckNameElement = columns.get(1);
+			String deckUrl = deckNameElement.select("a").attr("href");
+			String deckName = deckNameElement.text();
+//			Element player = columns.get(2);
+//			Element format = columns.get(3);
+//			Element event = columns.get(4);
+			CompLevel compLevel = null;
+			Elements elementsByTag = columns.get(5).getElementsByTag("img");
+			int size = elementsByTag.size();
+			switch (size) {
+			case 1:
+				if(elementsByTag.toString().contains("bigstar")) {
+					compLevel = CompLevel.PROFESSIONAL;
+				} else {
+					compLevel = CompLevel.REGULAR;
+				}
+				break;
+			case 2:
+				compLevel = CompLevel.COMPETITIVE;
+				break;
+			case 3:
+				compLevel = CompLevel.MAJOR;
+				break;
+			default:
+				System.err.println("comp level error");
+				break;
+			}
+//			if(level.)
+			String rank = columns.get(6).text();
+			String dateText = columns.get(7).text();
+			LocalDate date = LocalDate.parse(dateText, DateTimeFormatter.ofPattern("dd/MM/yy"));
 
-		int allDecksCount = Integer.parseInt(sumText);
-
-		return allDecksCount;
+			searchResultDeck.setCompLevel(compLevel);
+			searchResultDeck.setDate(date);
+			searchResultDeck.setRank(rank);
+			searchResultDeck.setDeckName(deckName);
+			searchResultDeck.setUrl(deckUrl);
+			
+			decks.add(searchResultDeck);
+		}
+		return decks;
 	}
 
 }
