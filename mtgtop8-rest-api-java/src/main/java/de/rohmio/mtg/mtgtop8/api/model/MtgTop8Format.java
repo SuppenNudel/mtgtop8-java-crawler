@@ -7,6 +7,12 @@ public enum MtgTop8Format {
 	@JsonProperty("")
 	ALL,
 
+	@JsonProperty("EXP")
+	EXPLORER,
+
+	@JsonProperty("ALCH")
+	ALCHEMY,
+
 	@JsonProperty("ST")
 	STANDARD,
 
@@ -24,6 +30,9 @@ public enum MtgTop8Format {
 
 	@JsonProperty("EDH")
 	DUEL_COMMANDER,
+
+	@JsonProperty("cEDH")
+	CEDH,
 
 	@JsonProperty("EDHM")
 	MTGO_COMMANDER,
@@ -46,8 +55,14 @@ public enum MtgTop8Format {
 	@JsonProperty("CHL")
 	CANADIAN_HIGHLANDER,
 
+	@JsonProperty("HI")
+	HISTORIC,
+
 	@JsonProperty("LI")
-	LIMITED;
+	LIMITED,
+
+	@JsonProperty("BL")
+	BLOCK;
 
 	public String getId() {
 		try {

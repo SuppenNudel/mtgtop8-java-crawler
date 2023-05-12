@@ -26,7 +26,7 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 
 	private static final DateTimeFormatter dateTimeFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-//	private static Map<String, Integer> scores = new HashMap<>();
+	//	private static Map<String, Integer> scores = new HashMap<>();
 
 	public SearchEndpoint() {
 		super("search", SearchResult.class);
@@ -79,6 +79,13 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 		return this;
 	}
 
+	public SearchEndpoint archetype(int archetypeId, MtgTop8Format format) {
+		String key = "archetype_sel["+format.getId()+"]";
+		resetQueryParam(key);
+		target = target.queryParam(key, archetypeId);
+		return this;
+	}
+
 	public SearchEndpoint cards(Collection<String> cardNames) {
 		String key = "cards";
 		resetQueryParam(key);
@@ -94,13 +101,13 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 		}
 		String joined = String.join(System.lineSeparator(), newNames);
 		target = target.queryParam(key, joined);
-//		if(newNames.size() == 1) {
-//			cardName = newNames.get(0);
-//		}
+		//		if(newNames.size() == 1) {
+		//			cardName = newNames.get(0);
+		//		}
 		return this;
 	}
 
-//	private String cardName;
+	//	private String cardName;
 
 	public SearchEndpoint cards(String... cardNames) {
 		return cards(Arrays.asList(cardNames));
@@ -140,21 +147,40 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 		}
 		return score;
 	}
-	*/
+	 */
+
+	public SearchResult getAllAvailable() {
+		SearchResult searchResult = null;
+		for (int page=1; searchResult == null || searchResult.getDecks().size() < searchResult.getDecksMatching(); ++page) {
+			System.out.print("requesting page "+page);
+			SearchResult newSearchResult = page(page).get();
+			if (newSearchResult.getDecks().isEmpty()) {
+				System.out.println(" EMPTY");
+				break;
+			}
+			System.out.println(" OK");
+			if(searchResult == null) {
+				searchResult = newSearchResult;
+			} else {
+				searchResult.getDecks().addAll(newSearchResult.getDecks());
+			}
+		}
+		return searchResult;
+	}
 
 	@Override
 	protected SearchResult parseReponse(Response response) {
 		String html = response.readEntity(String.class);
 		Document document = Jsoup.parse(html);
-		
+
 		SearchResult searchResult = new SearchResult();
 		int deckCount = parseDocumentForDeckCount(document);
 		searchResult.setDecksMatching(deckCount);
-		
+
 		List<SearchResultDeck> decks = parseDocumentForDecks(document);
 		searchResult.setDecks(decks);
-		
-		
+
+
 		return searchResult;
 	}
 
@@ -170,8 +196,8 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 			// probably a split card, where only the front side got used
 			return TOO_MANY_CARDS;
 		}
-		
-		
+
+
 		String sumText = document.select("table > tbody > tr > td > div[class=w_title]").text();
 		Pattern pattern = Pattern.compile("([0-9]+) decks matching");
 		Matcher matcher = pattern.matcher(sumText);
@@ -182,20 +208,20 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 		}
 		return OTHER_ERRROR;
 	}
-	
+
 	private List<SearchResultDeck> parseDocumentForDecks(Document document) {
 		ArrayList<SearchResultDeck> decks = new ArrayList<>();
 		Elements deckRows = document.select("table.Stable tr.hover_tr");
 		for(Element deckRow : deckRows) {
 			SearchResultDeck searchResultDeck = new SearchResultDeck();
-//			deckRow.select(evaluator)
+			//			deckRow.select(evaluator)
 			Elements columns = deckRow.select("td");
 			Element deckNameElement = columns.get(1);
 			String deckUrl = deckNameElement.select("a").attr("href");
 			String deckName = deckNameElement.text();
-//			Element player = columns.get(2);
-//			Element format = columns.get(3);
-//			Element event = columns.get(4);
+			//			Element player = columns.get(2);
+			MtgTop8Format format = MtgTop8Format.valueOf(columns.get(3).text().toUpperCase().replace(' ', '_'));
+			//			Element event = columns.get(4);
 			CompLevel compLevel = null;
 			Elements elementsByTag = columns.get(5).getElementsByTag("img");
 			int size = elementsByTag.size();
@@ -217,7 +243,7 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 				System.err.println("comp level error");
 				break;
 			}
-//			if(level.)
+			//			if(level.)
 			String rank = columns.get(6).text();
 			String dateText = columns.get(7).text();
 			LocalDate date = LocalDate.parse(dateText, DateTimeFormatter.ofPattern("dd/MM/yy"));
@@ -227,7 +253,8 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 			searchResultDeck.setRank(rank);
 			searchResultDeck.setDeckName(deckName);
 			searchResultDeck.setUrl(deckUrl);
-			
+			searchResultDeck.setFormat(format);
+
 			decks.add(searchResultDeck);
 		}
 		return decks;

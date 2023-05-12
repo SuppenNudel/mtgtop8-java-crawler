@@ -1,7 +1,7 @@
 package de.rohmio.mtg.mtgtop8.api.endpoints;
 
 import java.io.IOException;
-import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,14 +14,12 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import de.rohmio.mtg.mtgtop8.api.model.CompareResult;
-
-public class CompareEndpoint extends AbstractEndpoint<Map<String, CompareResult>> {
+public class CompareEndpoint extends AbstractEndpoint<List<DeckList>> {
 
 	public CompareEndpoint() {
-		super("compare", new GenericType<Map<String, CompareResult>>() {});
+		super("compare", new GenericType<List<DeckList>>() {});
 	}
-	
+
 	private String deckIds;
 
 	public CompareEndpoint deckIds(int... deckIds) {
@@ -49,21 +47,22 @@ public class CompareEndpoint extends AbstractEndpoint<Map<String, CompareResult>
 	}
 
 	@Override
-	protected Map<String, CompareResult> parseReponse(Response response) {
+	protected List<DeckList> parseReponse(Response response) {
 		String html = response.readEntity(String.class);
 		Document document = Jsoup.parse(html);
 
-		Map<String, CompareResult> compareResult = parseDocumentForCompareResult(document);
+		List<DeckList> compareResult = parseDocumentForCompareResult(document);
 		return compareResult;
 	}
-	
+
 	@Override
-	public Map<String, CompareResult> get() {
+	public List<DeckList> get() {
 		try {
-			URL url = new URL("https://mtgtop8.com/compare?l="+deckIds);
-			System.out.println("requesting: "+url);
-			Document document = Jsoup.parse(url, 1000000);
-			Map<String, CompareResult> compareResult = parseDocumentForCompareResult(document);
+			String urlString = "https://mtgtop8.com/compare?l="+deckIds;
+			//			URL url = new URL(urlString);
+			//			Document document = Jsoup.parse(url, Integer.MAX_VALUE);
+			Document document = Jsoup.connect(urlString).maxBodySize(0).timeout(60000).get();
+			List<DeckList> compareResult = parseDocumentForCompareResult(document);
 			return compareResult;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -71,37 +70,38 @@ public class CompareEndpoint extends AbstractEndpoint<Map<String, CompareResult>
 		return null;
 	}
 
-	private Map<String, CompareResult> parseDocumentForCompareResult(Document document) {
-		Map<String, CompareResult> compareResults = new HashMap<>();
+	private List<DeckList> parseDocumentForCompareResult(Document document) {
+		Map<Integer, DeckList> decks = new HashMap<>();
 		Elements tableRows = document.select("html > body > div.page > div > div.page > table > tbody > tr");
+
+		boolean main = true;
 		for (Element tableRow : tableRows) {
-			String imgSrc = tableRow.select("td img").attr("src");
-			if(imgSrc.equals("graph/checked.png")) {
-				String cardName = tableRow.select("div.c2").text();
-				CompareResult compareResult = new CompareResult(cardName);
+			String category = tableRow.select("td[align=center]").text();
+			if("SIDEBOARDS".equals(category)) {
+				main = false;
+			}
+			String cardName = tableRow.select("div.c2").text();
+			if(!cardName.isEmpty()) {
 				Elements cardNumberElements = tableRow.select("div.c");
+
+				int deckNumber = 0;
 				for (Element cardNumberElement : cardNumberElements) {
-					String text = cardNumberElement.text();
-					int amount;
-					if (text.isBlank()) {
-						amount = 0;
-					} else {
-						amount = Integer.parseInt(text);
+					++deckNumber;
+					String amountText = cardNumberElement.text();
+					if (!amountText.isEmpty()) {
+						int amount = Integer.parseInt(amountText);
+						DeckList deckList = decks.getOrDefault(deckNumber, new DeckList());
+						decks.putIfAbsent(deckNumber, deckList);
+						deckList.putCard(cardName, amount, main);
 					}
-					compareResult.addCardAmount(amount);
-				}
-				if(compareResults.containsKey(cardName)) {
-					compareResults.get(cardName).merge(compareResult);
-				} else {
-					compareResults.put(cardName, compareResult);
 				}
 			}
 		}
-		return compareResults;
+		return new ArrayList<>(decks.values());
 	}
 
-//		String sumText = document.select("table > tbody > tr > td > div[class=w_title]").text();
-//		Pattern pattern = Pattern.compile("([0-9]+) decks matching");
-//		Elements deckRows = document.select("table.Stable tr.hover_tr");
+	//		String sumText = document.select("table > tbody > tr > td > div[class=w_title]").text();
+	//		Pattern pattern = Pattern.compile("([0-9]+) decks matching");
+	//		Elements deckRows = document.select("table.Stable tr.hover_tr");
 
 }

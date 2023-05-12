@@ -2,6 +2,7 @@ package de.rohmio.mtg.mtgtop8.api;
 
 import java.util.logging.Level;
 
+import de.rohmio.mtg.mtgtop8.api.endpoints.CompareEndpoint;
 import de.rohmio.mtg.mtgtop8.api.endpoints.SearchEndpoint;
 
 public abstract class MtgTop8Api {
@@ -14,6 +15,10 @@ public abstract class MtgTop8Api {
 	 */
 	public static SearchEndpoint search() {
 		return new SearchEndpoint();
+	}
+
+	public static CompareEndpoint compare() {
+		return new CompareEndpoint();
 	}
 
 }

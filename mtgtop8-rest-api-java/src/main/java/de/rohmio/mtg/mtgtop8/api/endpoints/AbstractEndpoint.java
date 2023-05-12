@@ -21,7 +21,7 @@ public abstract class AbstractEndpoint<T> {
 
 	private static LocalDateTime lastRequestTimestamp = LocalDateTime.now().minus(MtgTop8Api.RATE_LIMIT,
 			ChronoUnit.MILLIS);
-//	private static final String encoding = "ISO-8859-1";
+	//	private static final String encoding = "ISO-8859-1";
 
 	protected WebTarget target;
 	private GenericType<T> resultType;
@@ -55,7 +55,7 @@ public abstract class AbstractEndpoint<T> {
 			}
 		}
 		if (MtgTop8Api.LOG_LEVEL.intValue() <= Level.INFO.intValue()) {
-			System.out.println(Thread.currentThread() + " will execute");
+			//			System.out.println(Thread.currentThread() + " will execute");
 		}
 		lastRequestTimestamp = LocalDateTime.now();
 	}
@@ -63,7 +63,7 @@ public abstract class AbstractEndpoint<T> {
 	public T get() {
 		waitIfNecessary();
 		if (MtgTop8Api.LOG_LEVEL.intValue() <= Level.INFO.intValue()) {
-			System.out.println(target.getUri());
+			//			System.out.println(target.getUri());
 		}
 		return handleResponse(target.request().get());
 	}

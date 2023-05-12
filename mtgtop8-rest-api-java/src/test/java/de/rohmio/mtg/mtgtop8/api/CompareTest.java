@@ -9,14 +9,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
-import de.rohmio.mtg.mtgtop8.api.endpoints.CompareEndpoint;
+import de.rohmio.mtg.mtgtop8.api.endpoints.DeckList;
 import de.rohmio.mtg.mtgtop8.api.model.CompLevel;
-import de.rohmio.mtg.mtgtop8.api.model.CompareResult;
 import de.rohmio.mtg.mtgtop8.api.model.MtgTop8Format;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResult;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResultDeck;
@@ -28,17 +26,17 @@ public class CompareTest {
 	@Test
 	public void multipleDecks() {
 		int[] deckIds = { 480306, 480208, 480371, 479906, 479917, 478854, 478339, 478050, 477928, 476372 };
-		Map<String, CompareResult> map = new CompareEndpoint().deckIds(deckIds).get();
-		CompareResult compareResult = map.get("Battlefield Forge");
+		List<DeckList> deckLists = MtgTop8Api.compare().deckIds(deckIds).get();
+		List<Integer> cardAmounts = deckLists.stream().map(deck -> deck.getCombined().get("Battlefield Forge")).collect(Collectors.toList());
 		List<Integer> expected = Arrays.asList(0, 0, 4, 0, 0, 0, 0, 4, 4, 4);
-		assertEquals(expected, compareResult.getCardAmounts());
+		assertEquals(expected, cardAmounts);
 	}
 
 	@Test
 	public void cardInMainAndSide() {
 		int deckId = 479917;
-		Map<String, CompareResult> map = new CompareEndpoint().deckIds(deckId).get();
-		assertEquals(Arrays.asList(4), map.get("Bonecrusher Giant").getCardAmounts());
+		List<DeckList> deckLists = MtgTop8Api.compare().deckIds(deckId).get();
+		assertEquals(4, deckLists.get(0).getCombined().get("Bonecrusher Giant"));
 	}
 
 	@Test
@@ -51,14 +49,14 @@ public class CompareTest {
 					.format(MtgTop8Format.MODERN).page(page).cards(cardName).get();
 			decksMatching = searchResult.getDecksMatching();
 			List<SearchResultDeck> decks = searchResult.getDecks();
-			List<Integer> deckIds = decks.stream().map(d -> d.getDeckId()).collect(Collectors.toList());
+			List<Integer> deckIds = decks.stream().map(SearchResultDeck::getDeckId).collect(Collectors.toList());
 
-			Map<String, CompareResult> map = new CompareEndpoint().deckIds(deckIds).get();
-			CompareResult compareResult = map.get(cardName);
-			if(compareResult.getCardAmounts().contains(5)) {
+			List<DeckList> deckLists = MtgTop8Api.compare().deckIds(deckIds).get();
+			List<Integer> cardAmounts = deckLists.stream().map(deck -> deck.getCombined().get(cardName)).collect(Collectors.toList());
+			if(cardAmounts.contains(5)) {
 				System.out.println();
 			}
-			
+
 			decksFound += decks.size();
 		}
 	}
@@ -77,11 +75,10 @@ public class CompareTest {
 				noMore = true;
 			}
 
-			List<Integer> deckIds = decks.stream().map(d -> d.getDeckId()).collect(Collectors.toList());
+			List<Integer> deckIds = decks.stream().map(SearchResultDeck::getDeckId).collect(Collectors.toList());
 			allDeckIds.addAll(deckIds);
 		}
-		CompareEndpoint compareEndpoint = new CompareEndpoint();
-		Map<String, CompareResult> compareResults = compareEndpoint.deckIds(allDeckIds).get();
+		List<DeckList> compareResults = MtgTop8Api.compare().deckIds(allDeckIds).get();
 		System.out.println();
 	}
 
@@ -101,25 +98,21 @@ public class CompareTest {
 				noMore = true;
 			}
 
-			List<Integer> deckIds = decks.stream().map(d -> d.getDeckId()).collect(Collectors.toList());
+			List<Integer> deckIds = decks.stream().map(SearchResultDeck::getDeckId).collect(Collectors.toList());
 
-			CompareEndpoint compareEndpoint = new CompareEndpoint();
-			Map<String, CompareResult> compareResults = compareEndpoint.deckIds(deckIds).get();
+			List<DeckList> compareResults = MtgTop8Api.compare().deckIds(deckIds).get();
 
-			compareResults.forEach(new BiConsumer<String, CompareResult>() {
-				@Override
-				public void accept(String key, CompareResult value) {
-					Integer integer = allCompareResults.get(key);
-					Integer max = value.getCardAmounts().stream().max((int1, int2) -> int1.compareTo(int2)).get();
-					if (integer == null) {
-						allCompareResults.put(key, max);
-					} else {
-						if (max > integer) {
-							allCompareResults.put(key, max);
-						}
-					}
-				}
-			});
+			//			compareResults.forEach(deck -> {
+			//				Integer integer = allCompareResults.get(key);
+			//				Integer max = value.getCardAmounts().stream().max((int1, int2) -> int1.compareTo(int2)).get();
+			//				if (integer == null) {
+			//					allCompareResults.put(key, max);
+			//				} else {
+			//					if (max > integer) {
+			//						allCompareResults.put(key, max);
+			//					}
+			//				}
+			//			});
 
 		}
 		Set<String> keySet = allCompareResults.keySet();

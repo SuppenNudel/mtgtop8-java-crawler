@@ -23,27 +23,27 @@ public class RequestTest {
 	@BeforeEach
 	public void generateBase() {
 		endpoint = MtgTop8Api.search()
-		.enddate("25/05/2020")
-		.mainboard(true)
-		.sideboard(true)
-		.format(MtgTop8Format.STANDARD);
+				.enddate("25/05/2020")
+				.mainboard(true)
+				.sideboard(true)
+				.format(MtgTop8Format.STANDARD);
 	}
-	
+
 	@Test
 	public void deckTableTest() {
 		List<SearchResultDeck> allDecks = new ArrayList<>();
 		boolean noMore = false;
 		for(int page = 1; !noMore; ++page) {
 			SearchResult searchResult = MtgTop8Api.search()
-			.startdate("29/04/2022")
-			.enddate(LocalDate.of(2022, 7, 20))
-			.mainboard(true)
-			.sideboard(true)
-			.compLevel(CompLevel.COMPETITIVE, CompLevel.MAJOR, CompLevel.PROFESSIONAL)
-			.format(MtgTop8Format.PIONEER)
-//			.cards("Bonecrusher Giant")
-			.page(page)
-			.get();
+					.startdate("29/04/2022")
+					.enddate(LocalDate.of(2022, 7, 20))
+					.mainboard(true)
+					.sideboard(true)
+					.compLevel(CompLevel.COMPETITIVE, CompLevel.MAJOR, CompLevel.PROFESSIONAL)
+					.format(MtgTop8Format.PIONEER)
+					//			.cards("Bonecrusher Giant")
+					.page(page)
+					.get();
 			List<SearchResultDeck> decks = searchResult.getDecks();
 			allDecks.addAll(decks);
 			if(decks.size() < 25) {
@@ -56,13 +56,13 @@ public class RequestTest {
 		}
 		System.out.println();
 		allDecks.forEach(d -> System.out.print("_"+d.getDeckId()));
-		assertEquals(416, allDecks.size());
+		assertEquals(472, allDecks.size());
 	}
 
 	@Test
 	public void noCardnameTest() throws IOException {
 		SearchResult searchResult = endpoint.get();
-		assertEquals(43809, searchResult.getDecksMatching());
+		assertEquals(43833, searchResult.getDecksMatching());
 	}
 
 

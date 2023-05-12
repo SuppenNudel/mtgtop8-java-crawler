@@ -27,7 +27,7 @@
 	<developers>
 		<developer>
 			<name>Cedric Rohm</name>
-			<email>rohm.cedric@gmail.com</email>
+			<email>5153475+SuppenNudel@users.noreply.github.com</email>
 			<organization>Private</organization>
 			<!-- <organizationUrl>http://www.sonatype.com</organizationUrl> -->
 		</developer>
@@ -65,13 +65,13 @@
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.7.0</version>
+			<version>5.9.2</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-params</artifactId>
-			<version>5.7.0</version>
+			<version>5.9.2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -130,6 +130,9 @@
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.sonatype.plugins</groupId>
