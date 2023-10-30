@@ -4,12 +4,19 @@ import java.time.LocalDate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import io.github.suppennudel.mtg.generic.MtgFormat;
+
 public class SearchResultDeck {
+
+	private static final Pattern URL_PATTERN = Pattern.compile("event\\?e=([0-9]+)&d=([0-9]+)&f=\\w+");
+
+	private Integer deckId;
+	private Integer eventId;
 
 	private String deckName;
 	private String url;
 	private String player;
-	private MtgTop8Format format;
+	private MtgFormat format;
 	private String eventName;
 	private CompLevel compLevel;
 	private String rank;
@@ -20,7 +27,7 @@ public class SearchResultDeck {
 		return String.format("%s - %s - %s - %s - %s - %s - %s", deckName, player, format, eventName, compLevel, rank, date);
 	}
 
-	public MtgTop8Format getFormat() {
+	public MtgFormat getFormat() {
 		return format;
 	}
 	public String getEventName() {
@@ -53,11 +60,6 @@ public class SearchResultDeck {
 		return url;
 	}
 
-	private static final Pattern URL_PATTERN = Pattern.compile("event\\?e=([0-9]+)&d=([0-9]+)&f=\\w+");
-
-	private Integer deckId;
-	private Integer eventId;
-
 	public Integer getDeckId() {
 		if(deckId == null) {
 			matchUrl();
@@ -80,7 +82,6 @@ public class SearchResultDeck {
 		}
 	}
 
-
 	public CompLevel getCompLevel() {
 		return compLevel;
 	}
@@ -91,7 +92,7 @@ public class SearchResultDeck {
 		return date;
 	}
 
-	public void setFormat(MtgTop8Format format) {
+	public void setFormat(MtgFormat format) {
 		this.format = format;
 	}
 

@@ -14,10 +14,14 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class CompareEndpoint extends AbstractEndpoint<List<DeckList>> {
+import de.rohmio.mtg.mtgtop8.api.model.MtgTop8DeckList;
+import io.github.suppennudel.mtg.generic.MtgDeckInfo;
+import io.github.suppennudel.mtg.generic.MtgDeckInfo.ListSection;
+
+public class CompareEndpoint extends AbstractEndpoint<List<MtgTop8DeckList>> {
 
 	public CompareEndpoint() {
-		super("compare", new GenericType<List<DeckList>>() {});
+		super("compare", new GenericType<List<MtgTop8DeckList>>() {});
 	}
 
 	private String deckIds;
@@ -47,22 +51,22 @@ public class CompareEndpoint extends AbstractEndpoint<List<DeckList>> {
 	}
 
 	@Override
-	protected List<DeckList> parseReponse(Response response) {
+	protected List<MtgTop8DeckList> parseReponse(Response response) {
 		String html = response.readEntity(String.class);
 		Document document = Jsoup.parse(html);
 
-		List<DeckList> compareResult = parseDocumentForCompareResult(document);
+		List<MtgTop8DeckList> compareResult = parseDocumentForCompareResult(document);
 		return compareResult;
 	}
 
 	@Override
-	public List<DeckList> get() {
+	public List<MtgTop8DeckList> get() {
 		try {
 			String urlString = "https://mtgtop8.com/compare?l="+deckIds;
 			//			URL url = new URL(urlString);
 			//			Document document = Jsoup.parse(url, Integer.MAX_VALUE);
 			Document document = Jsoup.connect(urlString).maxBodySize(0).timeout(60000).get();
-			List<DeckList> compareResult = parseDocumentForCompareResult(document);
+			List<MtgTop8DeckList> compareResult = parseDocumentForCompareResult(document);
 			return compareResult;
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -70,15 +74,15 @@ public class CompareEndpoint extends AbstractEndpoint<List<DeckList>> {
 		return null;
 	}
 
-	private List<DeckList> parseDocumentForCompareResult(Document document) {
-		Map<Integer, DeckList> decks = new HashMap<>();
+	private List<MtgTop8DeckList> parseDocumentForCompareResult(Document document) {
+		Map<Integer, MtgTop8DeckList> decks = new HashMap<>();
 		Elements tableRows = document.select("html > body > div.page > div > div.page > table > tbody > tr");
 
-		boolean main = true;
+		MtgDeckInfo.ListSection listSection = ListSection.MAIN;
 		for (Element tableRow : tableRows) {
 			String category = tableRow.select("td[align=center]").text();
 			if("SIDEBOARDS".equals(category)) {
-				main = false;
+				listSection = ListSection.SIDEBOARD;
 			}
 			String cardName = tableRow.select("div.c2").text();
 			if(!cardName.isEmpty()) {
@@ -90,9 +94,9 @@ public class CompareEndpoint extends AbstractEndpoint<List<DeckList>> {
 					String amountText = cardNumberElement.text();
 					if (!amountText.isEmpty()) {
 						int amount = Integer.parseInt(amountText);
-						DeckList deckList = decks.getOrDefault(deckNumber, new DeckList());
+						MtgTop8DeckList deckList = decks.getOrDefault(deckNumber, new MtgTop8DeckList("mtgtop8 default deck name"));
 						decks.putIfAbsent(deckNumber, deckList);
-						deckList.putCard(cardName, amount, main);
+						deckList.putCard(cardName, amount, listSection);
 					}
 				}
 			}

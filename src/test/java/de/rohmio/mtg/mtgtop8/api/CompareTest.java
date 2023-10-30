@@ -13,11 +13,11 @@ import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
 
-import de.rohmio.mtg.mtgtop8.api.endpoints.DeckList;
 import de.rohmio.mtg.mtgtop8.api.model.CompLevel;
-import de.rohmio.mtg.mtgtop8.api.model.MtgTop8Format;
+import de.rohmio.mtg.mtgtop8.api.model.MtgTop8DeckList;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResult;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResultDeck;
+import io.github.suppennudel.mtg.generic.MtgFormat;
 
 public class CompareTest {
 
@@ -26,7 +26,7 @@ public class CompareTest {
 	@Test
 	public void multipleDecks() {
 		int[] deckIds = { 480306, 480208, 480371, 479906, 479917, 478854, 478339, 478050, 477928, 476372 };
-		List<DeckList> deckLists = MtgTop8Api.compare().deckIds(deckIds).get();
+		List<MtgTop8DeckList> deckLists = MtgTop8Api.compare().deckIds(deckIds).get();
 		List<Integer> cardAmounts = deckLists.stream().map(deck -> deck.getCombined().get("Battlefield Forge")).collect(Collectors.toList());
 		List<Integer> expected = Arrays.asList(0, 0, 4, 0, 0, 0, 0, 4, 4, 4);
 		assertEquals(expected, cardAmounts);
@@ -35,7 +35,7 @@ public class CompareTest {
 	@Test
 	public void cardInMainAndSide() {
 		int deckId = 479917;
-		List<DeckList> deckLists = MtgTop8Api.compare().deckIds(deckId).get();
+		List<MtgTop8DeckList> deckLists = MtgTop8Api.compare().deckIds(deckId).get();
 		assertEquals(4, deckLists.get(0).getCombined().get("Bonecrusher Giant"));
 	}
 
@@ -46,12 +46,12 @@ public class CompareTest {
 		String cardName = "Endurance";
 		for (int page = 1; decksMatching < 0 || decksFound < decksMatching; ++page) {
 			SearchResult searchResult = MtgTop8Api.search().compLevel(CompLevel.COMPETITIVE, CompLevel.MAJOR, CompLevel.PROFESSIONAL).startdate("29/04/2022")
-					.format(MtgTop8Format.MODERN).page(page).cards(cardName).get();
+					.format(MtgFormat.MODERN).page(page).cards(cardName).get();
 			decksMatching = searchResult.getDecksMatching();
 			List<SearchResultDeck> decks = searchResult.getDecks();
 			List<Integer> deckIds = decks.stream().map(SearchResultDeck::getDeckId).collect(Collectors.toList());
 
-			List<DeckList> deckLists = MtgTop8Api.compare().deckIds(deckIds).get();
+			List<MtgTop8DeckList> deckLists = MtgTop8Api.compare().deckIds(deckIds).get();
 			List<Integer> cardAmounts = deckLists.stream().map(deck -> deck.getCombined().get(cardName)).collect(Collectors.toList());
 			if(cardAmounts.contains(5)) {
 				System.out.println();
@@ -66,7 +66,7 @@ public class CompareTest {
 		List<Integer> allDeckIds = new ArrayList<>();
 		boolean noMore = false;
 		for (int page = 1; !noMore; ++page) {
-			SearchResult searchResult = MtgTop8Api.search().format(MtgTop8Format.PIONEER)
+			SearchResult searchResult = MtgTop8Api.search().format(MtgFormat.PIONEER)
 					.compLevel(CompLevel.COMPETITIVE, CompLevel.MAJOR, CompLevel.PROFESSIONAL).mainboard(true)
 					.sideboard(true).startdate(RELEASE_LATEST_STANDARD_SET).page(page).get();
 
@@ -78,7 +78,7 @@ public class CompareTest {
 			List<Integer> deckIds = decks.stream().map(SearchResultDeck::getDeckId).collect(Collectors.toList());
 			allDeckIds.addAll(deckIds);
 		}
-		List<DeckList> compareResults = MtgTop8Api.compare().deckIds(allDeckIds).get();
+		List<MtgTop8DeckList> compareResults = MtgTop8Api.compare().deckIds(allDeckIds).get();
 		System.out.println();
 	}
 
@@ -89,7 +89,7 @@ public class CompareTest {
 
 		boolean noMore = false;
 		for (int page = 1; !noMore; ++page) {
-			SearchResult searchResult = MtgTop8Api.search().format(MtgTop8Format.PIONEER)
+			SearchResult searchResult = MtgTop8Api.search().format(MtgFormat.PIONEER)
 					.compLevel(CompLevel.COMPETITIVE, CompLevel.MAJOR, CompLevel.PROFESSIONAL).mainboard(true)
 					.sideboard(true).startdate(RELEASE_LATEST_STANDARD_SET).page(page).get();
 
@@ -100,7 +100,7 @@ public class CompareTest {
 
 			List<Integer> deckIds = decks.stream().map(SearchResultDeck::getDeckId).collect(Collectors.toList());
 
-			List<DeckList> compareResults = MtgTop8Api.compare().deckIds(deckIds).get();
+			List<MtgTop8DeckList> compareResults = MtgTop8Api.compare().deckIds(deckIds).get();
 
 			//			compareResults.forEach(deck -> {
 			//				Integer integer = allCompareResults.get(key);

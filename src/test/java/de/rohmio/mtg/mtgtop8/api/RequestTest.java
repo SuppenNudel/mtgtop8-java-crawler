@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 
 import de.rohmio.mtg.mtgtop8.api.endpoints.SearchEndpoint;
 import de.rohmio.mtg.mtgtop8.api.model.CompLevel;
-import de.rohmio.mtg.mtgtop8.api.model.MtgTop8Format;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResult;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResultDeck;
+import io.github.suppennudel.mtg.generic.MtgFormat;
 
 public class RequestTest {
 
@@ -26,7 +26,7 @@ public class RequestTest {
 				.enddate("25/05/2020")
 				.mainboard(true)
 				.sideboard(true)
-				.format(MtgTop8Format.STANDARD);
+				.format(MtgFormat.STANDARD);
 	}
 
 	@Test
@@ -40,7 +40,7 @@ public class RequestTest {
 					.mainboard(true)
 					.sideboard(true)
 					.compLevel(CompLevel.COMPETITIVE, CompLevel.MAJOR, CompLevel.PROFESSIONAL)
-					.format(MtgTop8Format.PIONEER)
+					.format(MtgFormat.PIONEER)
 					//			.cards("Bonecrusher Giant")
 					.page(page)
 					.get();

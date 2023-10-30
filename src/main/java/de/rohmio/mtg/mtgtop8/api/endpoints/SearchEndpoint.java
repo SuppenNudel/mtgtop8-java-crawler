@@ -16,10 +16,11 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import de.rohmio.mtg.mtgtop8.api.MtgTop8Api;
 import de.rohmio.mtg.mtgtop8.api.model.CompLevel;
-import de.rohmio.mtg.mtgtop8.api.model.MtgTop8Format;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResult;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResultDeck;
+import io.github.suppennudel.mtg.generic.MtgFormat;
 
 
 public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
@@ -32,10 +33,11 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 		super("search", SearchResult.class);
 	}
 
-	public SearchEndpoint format(MtgTop8Format format) {
+	public SearchEndpoint format(MtgFormat format) {
 		String key = "format";
 		resetQueryParam(key);
-		target = target.queryParam(key, format.getId());
+		String formatId = MtgTop8Api.convert(format);
+		target = target.queryParam(key, formatId);
 		return this;
 	}
 
@@ -79,8 +81,8 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 		return this;
 	}
 
-	public SearchEndpoint archetype(int archetypeId, MtgTop8Format format) {
-		String key = "archetype_sel["+format.getId()+"]";
+	public SearchEndpoint archetype(int archetypeId, MtgFormat format) {
+		String key = "archetype_sel["+MtgTop8Api.convert(format)+"]";
 		resetQueryParam(key);
 		target = target.queryParam(key, archetypeId);
 		return this;
@@ -220,7 +222,8 @@ public class SearchEndpoint extends AbstractEndpoint<SearchResult> {
 			String deckUrl = deckNameElement.select("a").attr("href");
 			String deckName = deckNameElement.text();
 			//			Element player = columns.get(2);
-			MtgTop8Format format = MtgTop8Format.valueOf(columns.get(3).text().toUpperCase().replace(' ', '_'));
+			String formatString = columns.get(3).text();
+			MtgFormat format = MtgFormat.reverseConvert(formatString);
 			//			Element event = columns.get(4);
 			CompLevel compLevel = null;
 			Elements elementsByTag = columns.get(5).getElementsByTag("img");

@@ -9,8 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import de.rohmio.mtg.mtgtop8.api.endpoints.SearchEndpoint;
 import de.rohmio.mtg.mtgtop8.api.model.CompLevel;
-import de.rohmio.mtg.mtgtop8.api.model.MtgTop8Format;
 import de.rohmio.mtg.mtgtop8.api.model.SearchResult;
+import io.github.suppennudel.mtg.generic.MtgFormat;
 
 public class ScoringTest {
 
@@ -19,16 +19,16 @@ public class ScoringTest {
 	@BeforeEach
 	public void generateBase() {
 		endpoint = MtgTop8Api.search()
-		.startdate("25/05/2019")
-		.enddate("25/05/2020")
-		.mainboard(true)
-		.sideboard(true)
-		.cards("Lightning Bolt");
+				.startdate("25/05/2019")
+				.enddate("25/05/2020")
+				.mainboard(true)
+				.sideboard(true)
+				.cards("Lightning Bolt");
 	}
 
 	@Test
 	public void differenStartDate() throws IOException {
-		endpoint.format(MtgTop8Format.MODERN);
+		endpoint.format(MtgFormat.MODERN);
 		endpoint.compLevel(CompLevel.PROFESSIONAL);
 
 		assertEquals(5, endpoint.get());
@@ -39,10 +39,10 @@ public class ScoringTest {
 
 	@Test
 	public void compareScoringMethods() throws IOException {
-		endpoint.format(MtgTop8Format.MODERN);
+		endpoint.format(MtgFormat.MODERN);
 
 		// all
-//		System.out.println(calculateScore(mtgTop8Search.getDecks()));
+		//		System.out.println(calculateScore(mtgTop8Search.getDecks()));
 
 		endpoint.compLevel(CompLevel.PROFESSIONAL);
 		assertEquals(5, endpoint.get());
@@ -61,7 +61,7 @@ public class ScoringTest {
 	public void allFormats() throws IOException {
 		int allDecks = 0;
 		SearchResult decks = endpoint.get();
-		for(MtgTop8Format format : MtgTop8Format.values()) {
+		for(MtgFormat format : MtgFormat.values()) {
 			endpoint.format(format);
 			allDecks += endpoint.get().getDecksMatching();
 		}
@@ -71,7 +71,7 @@ public class ScoringTest {
 
 	@Test
 	public void requestDecks() throws IOException, InterruptedException {
-		endpoint.format(MtgTop8Format.MODERN);
+		endpoint.format(MtgFormat.MODERN);
 
 		endpoint.cards("Lightning Bolt");
 		int decks1 = endpoint.get().getDecksMatching();
